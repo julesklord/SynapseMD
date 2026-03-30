@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SynapseMD — Convierte conversaciones con tu IA en notas Markdown estructuradas para Obsidian, Notion, Logseq y más.">
+<title>SynapseMD — Conversational Intelligence Scribe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles/main.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="logo-wrap">
+    <div class="logo-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square">
+        <circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>
+        <line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/><line x1="5" y1="19" x2="19" y2="19"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="logo-title">SynapseMD</h1>
+      <p class="logo-sub">CONVERSATIONAL INTELLIGENCE SCRIBE</p>
+    </div>
+  </div>
+  <div class="header-chips">
+    <span class="chip">multi-provider</span>
+    <span class="chip chip--accent">v1.0.0</span>
+  </div>
+</header>
+
+<!-- PROVIDER BAR -->
+<div class="provider-bar">
+  <nav class="provider-tabs" role="tablist" aria-label="AI Provider">
+    <button class="ptab active" role="tab" data-provider="claude" onclick="selectProvider('claude')" aria-selected="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Claude
+    </button>
+    <button class="ptab" role="tab" data-provider="gemini" onclick="selectProvider('gemini')" aria-selected="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Gemini
+    </button>
+    <button class="ptab" role="tab" data-provider="openai" onclick="selectProvider('openai')" aria-selected="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      ChatGPT
+    </button>
+    <button class="ptab" role="tab" data-provider="ollama" onclick="selectProvider('ollama')" aria-selected="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="2" y="3" width="20" height="14"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Ollama
+    </button>
+  </nav>
+
+  <div class="provider-config" id="cfg-claude">
+    <label for="key-claude" class="sr-only">Anthropic API Key</label>
+    <input class="cfg-input cfg-wide" type="password" id="key-claude" placeholder="Anthropic API Key (sk-ant-api...)" autocomplete="off" />
+  </div>
+  <div class="provider-config" id="cfg-gemini" hidden>
+    <label for="key-gemini" class="sr-only">Google Gemini API Key</label>
+    <input class="cfg-input cfg-wide" type="password" id="key-gemini" placeholder="Google API Key (AIza...)" autocomplete="off" />
+  </div>
+  <div class="provider-config" id="cfg-openai" hidden>
+    <label for="key-openai" class="sr-only">OpenAI API Key</label>
+    <input class="cfg-input" type="password" id="key-openai" placeholder="OpenAI Key (sk-...)" autocomplete="off" />
+    <label for="model-openai" class="sr-only">OpenAI Model</label>
+    <select class="cfg-select" id="model-openai">
+      <option value="gpt-4o">gpt-4o</option>
+      <option value="gpt-4o-mini">gpt-4o-mini</option>
+      <option value="gpt-4-turbo">gpt-4-turbo</option>
+    </select>
+  </div>
+  <div class="provider-config" id="cfg-ollama" hidden>
+    <label for="host-ollama" class="sr-only">Ollama Host</label>
+    <input class="cfg-input" type="text" id="host-ollama" value="http://localhost:11434" placeholder="http://localhost:11434" />
+    <label for="model-ollama" class="sr-only">Ollama Model</label>
+    <input class="cfg-input" type="text" id="model-ollama" value="llama3" placeholder="modelo (ej: llama3, qwen2)" />
+  </div>
+</div>
+
+<main class="main-grid">
+  <!-- INPUT PANEL -->
+  <section class="panel panel--input" aria-label="Conversación de entrada">
+    <div class="panel-head">
+      <div class="status-dot" id="dot-in" aria-hidden="true"></div>
+      <span class="panel-label">01 / CONVERSACIÓN</span>
+      <span class="char-count" id="charcount" aria-live="polite">0 chars</span>
+    </div>
+
+    <div class="panel-body">
+      <div class="config-block">
+        <p class="config-label">CATEGORÍAS DE SALIDA</p>
+        <div class="pills" id="pills" role="group" aria-label="Categorías">
+          <button class="pill on" data-val="tecnologia">tecnologia</button>
+          <button class="pill on" data-val="ia-agentes">ia-agentes</button>
+          <button class="pill on" data-val="produccion-musical">produccion-musical</button>
+          <button class="pill on" data-val="academia">academia</button>
+          <button class="pill on" data-val="desarrollo">desarrollo</button>
+          <button class="pill on" data-val="pendientes">pendientes</button>
+          <button class="pill on" data-val="general">general</button>
+        </div>
+        <div class="add-cat-row">
+          <label for="new-cat" class="sr-only">Nueva categoría</label>
+          <input class="cfg-input" type="text" id="new-cat" placeholder="nueva categoría..." />
+          <button class="btn btn--ghost btn--sm" onclick="addCat()">+ AGREGAR</button>
+        </div>
+      </div>
+
+      <div class="config-block">
+        <label class="config-label" for="ctx">CONTEXTO (OPCIONAL)</label>
+        <textarea id="ctx" class="textarea textarea--sm" placeholder="Describe quién eres, tu proyecto, área de expertise... Mejora la calidad de las notas."></textarea>
+      </div>
+
+      <label for="conv" class="sr-only">Conversación completa</label>
+      <textarea id="conv" class="textarea textarea--main"
+        placeholder="Pega aquí la conversación completa.
+
+Funciona con cualquier formato:
+— Texto plano
+— Export de Claude / ChatGPT
+— Transcripción de cualquier chat
+
+El modelo extraerá conceptos clave, proyectos, fixes técnicos, decisiones y pendientes, y los convertirá en notas Markdown estructuradas."></textarea>
+
+      <div class="action-row">
+        <button class="btn btn--primary" id="run-btn" onclick="run()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          GENERAR NOTAS
+        </button>
+        <button class="btn btn--ghost btn--sm" onclick="clearAll()">LIMPIAR</button>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <span id="status-msg">ESPERANDO INPUT</span>
+      <span class="sep">///</span>
+      <div class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="prog-bar">
+        <div class="progress-fill" id="prog"></div>
+      </div>
+      <span id="prog-label"></span>
+    </div>
+  </section>
+
+  <!-- OUTPUT PANEL -->
+  <section class="panel panel--output" aria-label="Notas generadas">
+    <div class="panel-head">
+      <div class="status-dot" id="dot-out" aria-hidden="true"></div>
+      <span class="panel-label">02 / NOTAS MARKDOWN</span>
+      <div class="panel-actions">
+        <button class="btn btn--ghost btn--sm" id="copy-all" onclick="copyAllNotes()" disabled aria-label="Copiar todas las notas">COPIAR TODO</button>
+        <button class="btn btn--ghost btn--sm" id="dl-all" onclick="downloadAll()" disabled aria-label="Descargar ZIP">↓ ZIP</button>
+        <button class="btn btn--ghost btn--sm" id="dl-single" onclick="downloadSingleMD()" disabled aria-label="Descargar .md único">↓ .MD</button>
+      </div>
+    </div>
+
+    <div class="panel-body" id="output">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-glyph" aria-hidden="true">{ }</div>
+        <p>Las notas generadas aparecerán aquí en formato Markdown estándar, compatibles con Obsidian, Notion, Logseq, Bear o cualquier editor MD.</p>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <span id="notes-count">0 NOTAS</span>
+      <span class="sep">///</span>
+      <span id="provider-label" class="provider-label">—</span>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>Compatible con Obsidian · Notion · Logseq · Bear · Joplin</span>
+  <span>github-ready · FOSS-friendly · v1.0.0</span>
+</footer>
+
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
