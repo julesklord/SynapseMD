@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SynapseMD | Conversation Intelligence Scribe</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#070709;
+  --bg-card:rgba(20,20,26,0.6);
+  --bg-hover:rgba(30,30,40,0.8);
+  --glass:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.08);
+  --border-active:rgba(124,106,247,0.4);
+  --text:#f8f9fa;
+  --text-muted:#9da2b0;
+  --text-dim:#5a5f70;
+  --accent:hsl(250, 85%, 65%);
+  --accent-glow:hsla(250, 85%, 65%, 0.15);
+  --accent-d:hsl(250, 85%, 55%);
+  --accent-l:hsl(250, 85%, 75%);
+  --green:#52ee8c;
+  --amber:#fcd34d;
+  --red:#f87171;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Outfit',sans-serif;
+  --r:10px;
+  --r2:16px;
+  --shadow:0 8px 32px 0 rgba(0,0,0,0.37);
+}
+
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* HEADER */
+header{
+  padding:0 2rem;
+  height:64px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  flex-shrink:0;
+  background:var(--bg);
+  backdrop-filter:blur(8px);
+  position:relative;
+  z-index:10;
+}
+
+.logo-mark{
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-d));
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:#fff;
+  flex-shrink:0;
+  box-shadow:0 0 20px var(--accent-glow);
+}
+
+header h1{font-size:.9rem;font-weight:500;letter-spacing:-.01em;color:var(--text)}
+header .sub{font-size:.7rem;color:var(--text3);font-family:var(--mono);margin-left:4px}
+
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+.chip{
+  font-family:var(--mono);font-size:.65rem;
+  padding:3px 9px;border-radius:100px;
+  border:1px solid var(--border2);color:var(--text3);
+}
+
+/* PROVIDER SELECTOR */
+.provider-bar{
+  padding:.75rem 2rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+  flex-shrink:0;background:var(--bg);
+  backdrop-filter:blur(10px);
+}
+
+.provider-tabs{display:flex;gap:6px;background:var(--bg-card);padding:4px;border-radius:12px;border:1px solid var(--border)}
+
+.ptab{
+  font-family:var(--sans);font-size:.75rem;font-weight:500;
+  padding:6px 14px;border-radius:8px;
+  cursor:pointer;color:var(--text-dim);
+  transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);border:none;background:transparent;
+  display:flex;align-items:center;gap:8px;
+}
+.ptab:hover{color:var(--text-muted);background:var(--glass)}
+.ptab.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px var(--accent-glow)}
+
+.ptab .picon{width:14px;height:14px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+/* MAIN LAYOUT */
+main{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;min-height:0;background:var(--bg)}
+
+.panel{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:var(--bg-card);margin:12px;border-radius:var(--r2);border:1px solid var(--border);box-shadow:var(--shadow)}
+.panel:first-child{margin-right:6px}
+.panel:last-child{margin-left:6px}
+
+.phead{
+  padding:1rem 1.25rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;background:rgba(255,255,255,0.02);
+}
+.phead-label{
+  font-family:var(--sans);font-size:.75rem;font-weight:600;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;
+}
+input.cfg{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r);color:var(--text);
+  font-family:var(--mono);font-size:.72rem;
+  padding:6px 12px;outline:none;transition:border-color .2s;
+}
+input.cfg:focus{border-color:var(--accent)}
+input.cfg::placeholder{color:var(--text4)}
+input.cfg.wide{flex:1}
+input.cfg.narrow{width:200px}
+
+select.cfg{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r);color:var(--text2);
+  font-family:var(--mono);font-size:.72rem;
+  padding:6px 10px;outline:none;
+  cursor:pointer;
+}
+select.cfg:focus{border-color:var(--accent)}
+select.cfg option{background:var(--bg3);color:var(--text)}
+
+/* MAIN LAYOUT */
+main{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;min-height:0}
+
+.panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.panel:first-child{border-right:1px solid var(--border)}
+
+.phead{
+  padding:.75rem 1.25rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  flex-shrink:0;background:var(--bg2);
+}
+.phead-label{
+  font-family:var(--mono);font-size:.68rem;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.06em;
+}
+.phead-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+
+.pbody{flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem;min-height:0}
+.pbody::-webkit-scrollbar{width:3px}
+.pbody::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* STATUS DOT */
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text4);flex-shrink:0;transition:background .3s}
+.dot.ready{background:var(--green)}
+.dot.busy{background:var(--amber);animation:blink 1s ease-in-out infinite}
+.dot.err{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* TEXTAREA */
+textarea{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r2);color:var(--text);
+  font-family:var(--mono);font-size:.72rem;line-height:1.75;
+  padding:1rem;resize:none;outline:none;
+  transition:border-color .2s;flex:1;min-height:160px;
+}
+textarea:focus{border-color:var(--accent)}
+textarea::placeholder{color:var(--text4)}
+
+/* SECTION CONFIG */
+.section-config{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);padding:.875rem 1rem;
+  display:flex;flex-direction:column;gap:.6rem;flex-shrink:0;
+}
+.scfg-label{font-family:var(--mono);font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{
+  font-family:var(--mono);font-size:.65rem;font-weight:500;
+  padding:4px 12px;border-radius:100px;
+  background:var(--glass);border:1px solid var(--border);color:var(--text-dim);
+  cursor:pointer;transition:all .2s;user-select:none;
+}
+.pill:hover{border-color:var(--text-muted);color:var(--text-muted)}
+.pill.on{background:var(--accent-glow);border-color:var(--accent);color:var(--accent-l);box-shadow:0 0 10px var(--accent-glow)}
+
+.mini-row{display:flex;gap:6px;align-items:center}
+
+/* CONTEXT */
+.ctx-area{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);padding:.875rem 1rem;
+  display:flex;flex-direction:column;gap:.6rem;flex-shrink:0;
+}
+
+/* BUTTONS */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  border:none;border-radius:12px;
+  font-family:var(--sans);font-size:.85rem;font-weight:600;
+  padding:10px 20px;cursor:pointer;
+  transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);flex-shrink:0;
+}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 0 15px var(--accent-glow)}
+.btn-primary:hover:not(:disabled){background:var(--accent-d);box-shadow:0 0 25px var(--accent-glow)}
+
+.btn-ghost{background:var(--glass);color:var(--text-muted);border:1px solid var(--border)}
+.btn-ghost:hover:not(:disabled){background:rgba(255,255,255,0.08);color:var(--text)}
+
+.btn-green{background:rgba(82,238,140,0.1);color:var(--green);border:1px solid rgba(82,238,140,0.2)}
+.btn-green:hover:not(:disabled){background:rgba(82,238,140,0.15)}
+
+.btn-sm{padding:5px 10px;font-size:.7rem;border-radius:6px}
+
+.action-row{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* NOTE CARDS */
+.note-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r2);overflow:hidden;
+  animation:rise .4s cubic-bezier(0.16, 1, 0.3, 1) both;flex-shrink:0;
+  transition:all .2s;
+}
+.note-card:hover{border-color:var(--border-active);transform:translateY(-2px);box-shadow:var(--shadow)}
+
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.nc-head{
+  padding:12px 16px;
+  background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.nc-path{
+  font-family:var(--mono);font-size:.7rem;font-weight:500;
+  color:var(--accent-l);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.nc-tag{
+  font-family:var(--mono);font-size:.62rem;
+  padding:3px 8px;border-radius:100px;
+  background:var(--accent-glow);color:var(--accent-l);
+  border:1px solid hsla(250, 85%, 65%, 0.2);
+}
+
+.nc-body{
+  padding:14px 16px;
+  font-family:var(--mono);font-size:.72rem;
+  line-height:1.75;color:var(--text-muted);
+  max-height:240px;overflow-y:auto;
+  white-space:pre-wrap;word-break:break-word;
+}
+.nc-body::-webkit-scrollbar{width:4px}
+.nc-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.nc-foot{
+  padding:10px 16px;
+  background:rgba(255,255,255,0.02);border-top:1px solid var(--border);
+  display:flex;gap:8px;align-items:center;justify-content:flex-end;
+}
+
+/* EMPTY STATE */
+.empty{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:1.5rem;color:var(--text-dim);text-align:center;
+  padding:2rem;
+}
+.empty-glyph{font-size:3rem;opacity:.15;filter:drop-shadow(0 0 10px var(--accent))}
+
+/* SUMMARY CARD */
+.summary-card{
+  background:var(--accent-glow);border:1px solid hsla(250, 85%, 65%, 0.2);
+  border-radius:12px;padding:14px 18px;
+  font-family:var(--sans);font-size:.8rem;line-height:1.6;
+  color:var(--accent-l);flex-shrink:0;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.summary-card::before{content:'✦';color:var(--accent);font-size:1.1rem}
+
+/* ERROR CARD */
+.err-card{
+  background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.2);
+  border-radius:12px;padding:14px 18px;
+  font-family:var(--mono);font-size:.75rem;line-height:1.6;
+  color:var(--red);flex-shrink:0;
+}
+
+/* STATUS BAR */
+.statusbar{
+  height:30px;padding:0 1.25rem;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:.65rem;color:var(--text3);
+  flex-shrink:0;background:var(--bg2);
+}
+.statusbar .sep{color:var(--border2)}
+
+/* PROGRESS */
+.progress{width:80px;height:2px;background:var(--border2);border-radius:1px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:1px;transition:width .35s ease;width:0%}
+
+/* FOOTER */
+footer{
+  height:28px;padding:0 1.5rem;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;background:var(--bg2);
+}
+footer span{font-family:var(--mono);font-size:.62rem;color:var(--text4)}
+
+@media(max-width:700px){
+  main{grid-template-columns:1fr;overflow-y:auto;height:auto}
+  .panel:first-child{border-right:none;border-bottom:1px solid var(--border)}
+  html,body{overflow:auto;height:auto}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark"><i data-lucide="brain-circuit" size="20"></i></div>
+  <div style="display:flex;flex-direction:column">
+    <h1 style="font-weight:700;font-size:1.1rem">SynapseMD</h1>
+    <span class="sub" style="font-size:0.65rem;color:var(--text-dim)">Conversational Intelligence Scribe</span>
+  </div>
+  <div class="header-right">
+    <span class="chip">Knowledge Engine</span>
+    <span class="chip" style="background:var(--accent-glow);border-color:var(--accent-active);color:var(--accent-l)">v2.0 Beta</span>
+  </div>
+</header>
+
+<!-- PROVIDER BAR -->
+<div class="provider-bar">
+  <div class="provider-tabs">
+    <button class="ptab active" data-provider="claude" onclick="selectProvider('claude')">
+      <i data-lucide="sparkles" size="14"></i>Claude
+    </button>
+    <button class="ptab" data-provider="gemini" onclick="selectProvider('gemini')">
+      <i data-lucide="zap" size="14"></i>Gemini
+    </button>
+    <button class="ptab" data-provider="openai" onclick="selectProvider('openai')">
+      <i data-lucide="message-square" size="14"></i>ChatGPT
+    </button>
+    <button class="ptab" data-provider="ollama" onclick="selectProvider('ollama')">
+      <i data-lucide="cpu" size="14"></i>Ollama
+    </button>
+  </div>
+
+  <div class="provider-config" id="cfg-claude">
+    <input class="cfg wide" type="password" id="key-claude" placeholder="sk-ant-api..." />
+  </div>
+  <div class="provider-config" id="cfg-gemini" style="display:none">
+    <input class="cfg wide" type="password" id="key-gemini" placeholder="AIza..." />
+  </div>
+  <div class="provider-config" id="cfg-openai" style="display:none">
+    <input class="cfg wide" type="password" id="key-openai" placeholder="sk-..." />
+    <select class="cfg" id="model-openai">
+      <option value="gpt-4o">gpt-4o</option>
+      <option value="gpt-4o-mini">gpt-4o-mini</option>
+      <option value="gpt-4-turbo">gpt-4-turbo</option>
+    </select>
+  </div>
+  <div class="provider-config" id="cfg-ollama" style="display:none">
+    <input class="cfg narrow" type="text" id="host-ollama" value="http://localhost:11434" placeholder="http://localhost:11434" />
+    <input class="cfg narrow" type="text" id="model-ollama" value="qwen2:4b" placeholder="modelo (ej: llama3, qwen2:4b)" />
+  </div>
+</div>
+
+<main>
+  <!-- INPUT PANEL -->
+  <div class="panel">
+    <div class="phead">
+      <div class="dot" id="dot-in"></div>
+      <span class="phead-label">Conversación</span>
+      <div class="phead-right">
+        <span style="font-family:var(--mono);font-size:.65rem;color:var(--text3)" id="charcount">0 chars</span>
+      </div>
+    </div>
+    <div class="pbody">
+
+      <div class="section-config">
+        <div class="scfg-label">Categorías de salida</div>
+        <div class="pills" id="pills">
+          <div class="pill on" data-val="tecnologia">tecnologia</div>
+          <div class="pill on" data-val="ia-agentes">ia-agentes</div>
+          <div class="pill on" data-val="produccion-musical">produccion-musical</div>
+          <div class="pill on" data-val="academia">academia</div>
+          <div class="pill on" data-val="desarrollo">desarrollo</div>
+          <div class="pill on" data-val="pendientes">pendientes</div>
+          <div class="pill on" data-val="general">general</div>
+        </div>
+        <div class="mini-row">
+          <input class="cfg" type="text" id="new-cat" placeholder="nueva categoría..." style="flex:1" />
+          <button class="btn btn-ghost btn-sm" onclick="addCat()">+ agregar</button>
+        </div>
+      </div>
+
+      <div class="ctx-area">
+        <div class="scfg-label">Contexto (opcional)</div>
+        <textarea id="ctx" style="min-height:70px;flex:none" placeholder="Describe quién eres, tu proyecto, área de expertise... Esto mejora la calidad de las notas."></textarea>
+      </div>
+
+      <textarea id="conv" placeholder="Pega aquí la conversación completa.
+
+Funciona con cualquier formato:
+— Texto plano
+— Export de Claude / ChatGPT
+— Transcripción de cualquier chat
+
+El modelo extraerá conceptos clave, proyectos, fixes técnicos, decisiones y pendientes, y los convertirá en notas Markdown estructuradas."></textarea>
+
+      <div class="action-row">
+        <button class="btn btn-primary" id="run-btn" onclick="run()">
+          <i data-lucide="play" size="16"></i> Generar notas
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="clearAll()">limpiar</button>
+      </div>
+
+    </div>
+    <div class="statusbar">
+      <span id="status-msg">esperando input</span>
+      <span class="sep">·</span>
+      <div class="progress"><div class="progress-fill" id="prog"></div></div>
+      <span id="prog-label"></span>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="panel">
+    <div class="phead">
+      <div class="dot" id="dot-out"></div>
+      <span class="phead-label">Notas Generadas</span>
+      <div class="phead-right">
+        <button class="btn btn-ghost btn-sm" id="copy-all" onclick="copyAllNotes()" disabled><i data-lucide="copy" size="12"></i> Copiar Todo</button>
+        <button class="btn btn-ghost btn-sm" id="dl-all" onclick="downloadAll()" disabled><i data-lucide="archive" size="12"></i> ZIP</button>
+        <button class="btn btn-ghost btn-sm" id="dl-single" onclick="downloadSingleMD()" disabled><i data-lucide="file-text" size="12"></i> .md único</button>
+      </div>
+    </div>
+    <div class="pbody" id="output">
+      <div class="empty" id="empty-state">
+        <div class="empty-glyph">▸_</div>
+        <p>Las notas generadas aparecerán aquí en formato Markdown estándar, compatibles con Obsidian, Notion, Logseq, Bear, o cualquier editor MD.</p>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span id="notes-count">0 notas</span>
+      <span class="sep">·</span>
+      <span id="provider-label" style="color:var(--accent-l)">—</span>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>Markdown estándar — compatible con Obsidian · Notion · Logseq · Bear · Joplin · cualquier editor MD</span>
+  <span>github-ready · FOSS-friendly</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+let notes = [];
+let busy = false;
+let currentProvider = 'claude';
+
+const convEl = document.getElementById('conv');
+const progEl = document.getElementById('prog');
+const progLabel = document.getElementById('prog-label');
+const statusMsg = document.getElementById('status-msg');
+
+convEl.addEventListener('input', () => {
+  const n = convEl.value.length;
+  document.getElementById('charcount').textContent = n.toLocaleString() + ' chars';
+  document.getElementById('dot-in').className = 'dot ' + (n > 10 ? 'ready' : '');
+});
+
+document.querySelectorAll('.pill').forEach(p => p.addEventListener('click', () => p.classList.toggle('on')));
+
+function selectProvider(p) {
+  currentProvider = p;
+  document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', t.dataset.provider === p));
+  ['claude','gemini','openai','ollama'].forEach(id => {
+    document.getElementById('cfg-' + id).style.display = id === p ? 'flex' : 'none';
+  });
+  document.getElementById('provider-label').textContent = p;
+}
+
+function addCat() {
+  const v = document.getElementById('new-cat').value.trim().replace(/\s+/g,'-').toLowerCase();
+  if (!v) return;
+  const pill = document.createElement('div');
+  pill.className = 'pill on';
+  pill.dataset.val = v;
+  pill.textContent = v;
+  pill.addEventListener('click', () => pill.classList.toggle('on'));
+  document.getElementById('pills').appendChild(pill);
+  document.getElementById('new-cat').value = '';
+}
+
+function getCategories() {
+  return Array.from(document.querySelectorAll('.pill.on')).map(p => p.dataset.val);
+}
+
+function setProg(pct, label) {
+  progEl.style.width = pct + '%';
+  progLabel.textContent = label || '';
+}
+
+function setStatus(msg, dotState) {
+  statusMsg.textContent = msg;
+  if (dotState !== undefined) document.getElementById('dot-out').className = 'dot ' + dotState;
+}
+
+const SYSTEM_PROMPT = (cats, ctx) => `Eres un extractor de conocimiento especializado en crear notas Markdown de alta calidad a partir de conversaciones.
+
+Tu tarea: analizar la conversación y extraer su conocimiento más valioso en notas .md bien estructuradas.
+
+CATEGORÍAS DISPONIBLES: ${cats.join(', ')}
+
+REGLAS DE FORMATO MARKDOWN:
+- Cada nota debe tener frontmatter YAML al inicio:
+  ---
+  title: Título de la nota
+  tags: [tag1, tag2]
+  category: nombre-categoria
+  date: YYYY-MM-DD
+  ---
+- Usar ## para secciones principales, ### para subsecciones
+- Incluir bloques de código con triple backtick y lenguaje cuando haya comandos/código
+- Usar tablas Markdown para comparaciones y datos estructurados
+- Terminar cada nota con ## Referencias si hay conceptos relacionados
+- Términos técnicos en inglés, contenido en español latinoamericano
+- Links internos entre notas con [[NombreNota]] cuando sea relevante
+- Nombres de archivo: Titulo-En-PascalCase.md (sin espacios, sin acentos)
+
+CRITERIOS DE EXTRACCIÓN:
+- Conceptos técnicos importantes → nota propia
+- Proyectos o herramientas mencionadas → nota propia
+- Fixes o soluciones técnicas → nota propia
+- Filosofías o frameworks de pensamiento → nota propia
+- Ideas o proyectos pendientes → nota en categoría "pendientes"
+- NO crear notas para menciones triviales o de pasada
+- Máximo 8 notas por conversación para mantener calidad sobre cantidad
+- Mínimo 1 nota si hay algo valioso
+
+RESPONDE SOLO CON JSON VÁLIDO, sin backticks, sin texto extra:
+{
+  "notes": [
+    {
+      "filename": "Nombre-Del-Archivo.md",
+      "category": "tecnologia",
+      "title": "Título legible",
+      "tags": ["tag1", "tag2"],
+      "content": "contenido markdown completo incluyendo frontmatter"
+    }
+  ],
+  "summary": "Una línea describiendo qué se extrajo y por qué es valioso"
+}
+${ctx ? '\n\nCONTEXTO DEL USUARIO:\n' + ctx : ''}`;
+
+async function callClaude(conv, cats, ctx) {
+  const key = document.getElementById('key-claude').value.trim();
+  if (!key) throw new Error('API key de Anthropic requerida');
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({
+      model:'claude-3-5-sonnet-20240620',
+      max_tokens:8000,
+      system: SYSTEM_PROMPT(cats, ctx),
+      messages:[{role:'user', content:'Analiza esta conversación y genera las notas:\n\n' + conv}]
+    })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'Error Claude API'); }
+  const d = await r.json();
+  return d.content[0].text.trim();
+}
+
+async function callGemini(conv, cats, ctx) {
+  const key = document.getElementById('key-gemini').value.trim();
+  if (!key) throw new Error('API key de Google Gemini requerida');
+  const prompt = SYSTEM_PROMPT(cats, ctx) + '\n\nConversación a analizar:\n\n' + conv;
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      contents:[{parts:[{text: prompt}]}],
+      generationConfig:{temperature:0.3, maxOutputTokens:8000}
+    })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'Error Gemini API'); }
+  const d = await r.json();
+  return d.candidates[0].content.parts[0].text.trim();
+}
+
+async function callOpenAI(conv, cats, ctx) {
+  const key = document.getElementById('key-openai').value.trim();
+  const model = document.getElementById('model-openai').value;
+  if (!key) throw new Error('API key de OpenAI requerida');
+  const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer ' + key},
+    body: JSON.stringify({
+      model,
+      max_tokens:8000,
+      messages:[
+        {role:'system', content: SYSTEM_PROMPT(cats, ctx)},
+        {role:'user', content:'Analiza esta conversación y genera las notas:\n\n' + conv}
+      ]
+    })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'Error OpenAI API'); }
+  const d = await r.json();
+  return d.choices[0].message.content.trim();
+}
+
+async function callOllama(conv, cats, ctx) {
+  const host = document.getElementById('host-ollama').value.trim().replace(/\/$/, '');
+  const model = document.getElementById('model-ollama').value.trim();
+  if (!model) throw new Error('Especifica el modelo de Ollama');
+  const prompt = SYSTEM_PROMPT(cats, ctx) + '\n\nConversación a analizar:\n\n' + conv;
+  const r = await fetch(host + '/api/generate', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({model, prompt, stream:false, options:{temperature:0.3, num_predict:8000}})
+  });
+  if (!r.ok) throw new Error('No se pudo conectar a Ollama en ' + host + '. ¿Está corriendo?');
+  const d = await r.json();
+  return (d.response || '').trim();
+}
+
+function parseResponse(raw) {
+  let text = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('La respuesta no contiene JSON válido. El modelo puede no soportar este formato.');
+  return JSON.parse(m[0]);
+}
+
+async function run() {
+  const conv = convEl.value.trim();
+  if (!conv) { alert('Pega una conversación primero'); return; }
+  if (busy) return;
+
+  busy = true;
+  notes = [];
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('dl-all').disabled = true;
+  document.getElementById('dl-single').disabled = true;
+  document.getElementById('copy-all').disabled = true;
+  document.getElementById('dot-out').className = 'dot busy';
+  document.getElementById('output').innerHTML = '';
+  document.getElementById('empty-state') && document.getElementById('empty-state').remove();
+  document.getElementById('notes-count').textContent = '0 notas';
+  document.getElementById('provider-label').textContent = currentProvider;
+
+  const cats = getCategories();
+  const ctx = document.getElementById('ctx').value.trim();
+
+  setStatus('conectando con ' + currentProvider + '...', 'busy');
+  setProg(15, 'enviando...');
+
+  try {
+    let raw;
+    setProg(30, 'procesando...');
+
+    if (currentProvider === 'claude') raw = await callClaude(conv, cats, ctx);
+    else if (currentProvider === 'gemini') raw = await callGemini(conv, cats, ctx);
+    else if (currentProvider === 'openai') raw = await callOpenAI(conv, cats, ctx);
+    else raw = await callOllama(conv, cats, ctx);
+
+    setProg(75, 'parseando...');
+    const parsed = parseResponse(raw);
+    notes = parsed.notes || [];
+
+    setProg(90, 'renderizando...');
+    renderNotes(notes, parsed.summary);
+
+    document.getElementById('notes-count').textContent = notes.length + ' nota' + (notes.length !== 1 ? 's' : '');
+    document.getElementById('dl-all').disabled = false;
+    document.getElementById('dl-single').disabled = false;
+    document.getElementById('copy-all').disabled = false;
+    document.getElementById('dot-out').className = 'dot ready';
+    setStatus(notes.length + ' notas generadas con ' + currentProvider);
+    setProg(100, 'listo');
+    lucide.createIcons();
+
+  } catch(err) {
+    document.getElementById('dot-out').className = 'dot err';
+    setStatus('error: ' + err.message);
+    setProg(0, '');
+    const el = document.createElement('div');
+    el.className = 'err-card';
+    el.textContent = '✕ ' + err.message;
+    document.getElementById('output').appendChild(el);
+  }
+
+  busy = false;
+  document.getElementById('run-btn').disabled = false;
+}
+
+function renderNotes(notes, summary) {
+  const out = document.getElementById('output');
+
+  if (summary) {
+    const s = document.createElement('div');
+    s.className = 'summary-card';
+    s.textContent = '▸ ' + summary;
+    out.appendChild(s);
+  }
+
+  notes.forEach((note, i) => {
+    const card = document.createElement('div');
+    card.className = 'note-card';
+    const preview = note.content.slice(0, 350) + (note.content.length > 350 ? '\n...' : '');
+    card.innerHTML = `
+      <div class="nc-head">
+        <span class="nc-path">${note.category || 'general'}/${note.filename}</span>
+        ${(note.tags||[]).slice(0,3).map(t=>`<span class="nc-tag">#${t}</span>`).join('')}
+      </div>
+      <div class="nc-body">${esc(preview)}</div>
+      <div class="nc-foot">
+        <button class="btn btn-ghost btn-sm" onclick="copyNote(${i})"><i data-lucide="copy" size="12"></i> Copiar</button>
+        <button class="btn btn-ghost btn-sm" onclick="dlNote(${i})"><i data-lucide="download" size="12"></i> .md</button>
+      </div>
+    `;
+    out.appendChild(card);
+  });
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+function copyNote(i) {
+  navigator.clipboard.writeText(notes[i].content).then(() => {
+    const btns = document.querySelectorAll('.nc-foot .btn-ghost');
+    const idx = i * 2;
+    if (btns[idx]) {
+      const original = btns[idx].innerHTML;
+      btns[idx].innerHTML = '<i data-lucide="check" size="12"></i> Copiado';
+      lucide.createIcons();
+      setTimeout(() => { btns[idx].innerHTML = original; lucide.createIcons(); }, 2000);
+    }
+  });
+}
+
+function copyAllNotes() {
+  if (!notes.length) return;
+  const combined = notes.map(n => n.content).join('\n\n---\n\n');
+  navigator.clipboard.writeText(combined).then(() => {
+    const btn = document.getElementById('copy-all');
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="check" size="12"></i> Todo Copiado';
+    lucide.createIcons();
+    setTimeout(() => { btn.innerHTML = original; lucide.createIcons(); }, 2000);
+  });
+}
+
+function dlNote(i) {
+  const blob = new Blob([notes[i].content], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = notes[i].filename;
+  a.click();
+}
+
+async function downloadAll() {
+  if (!notes.length) return;
+  const zip = new JSZip();
+  notes.forEach(n => zip.folder(n.category || 'general').file(n.filename, n.content));
+  const blob = await zip.generateAsync({type:'blob'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'markdown-notes-' + new Date().toISOString().slice(0,10) + '.zip';
+  a.click();
+}
+
+function downloadSingleMD() {
+  if (!notes.length) return;
+  const combined = notes.map(n =>
+    `<!-- === ${n.category}/${n.filename} === -->\n\n${n.content}`
+  ).join('\n\n---\n\n');
+  const blob = new Blob([combined], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'notes-' + new Date().toISOString().slice(0,10) + '.md';
+  a.click();
+}
+
+function clearAll() {
+  convEl.value = '';
+  document.getElementById('charcount').textContent = '0 chars';
+  document.getElementById('dot-in').className = 'dot';
+  document.getElementById('dot-out').className = 'dot';
+  notes = [];
+  const out = document.getElementById('output');
+  out.innerHTML = '';
+  const empty = document.createElement('div');
+  empty.className = 'empty';
+  empty.id = 'empty-state';
+  empty.innerHTML = '<div class="empty-glyph">▸_</div><p>Las notas generadas aparecerán aquí en formato Markdown estándar, compatibles con Obsidian, Notion, Logseq, Bear, o cualquier editor MD.</p>';
+  out.appendChild(empty);
+  document.getElementById('notes-count').textContent = '0 notas';
+  document.getElementById('dl-all').disabled = true;
+  document.getElementById('dl-single').disabled = true;
+  document.getElementById('copy-all').disabled = true;
+  setStatus('esperando input');
+  setProg(0,'');
+}
+
+selectProvider('claude');
+lucide.createIcons();
+</script>
+</body>
+</html>
